@@ -1,16 +1,19 @@
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use("TkAgg")
 import os
 import simpleaudio as sa
-# from PyQt5 import QtCore
 import pandas as pd
 from scipy.signal import stft,resample,resample_poly
 import librosa as lb
 from scipy.optimize import curve_fit
+from math import floor,ceil
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.widgets import Slider,Button
 from soundfile import write
 import pickle
-from math import floor
 
 def windowed_avg(a,size):
     fresh = np.arange(int(size/2),(a.shape[0] - int(size/2)) , step = size)
@@ -46,18 +49,10 @@ def log_func(x,g,b,c):
             y_1=1/(1+np.exp((-1*x/g)-c))
             y_2=np.exp(-1*b*x)
             return(y_2 * (1-y_1))
-dim = 64
-
-mels=dim
-
-poww = 2
-
-fmax_ = 12000
 class Aud():
-    def __init__(self,file,dim=dim):
+    def __init__(self,file,dim=64):
         self.directory = file
         self.sound = sa.WaveObject.from_wave_file(file)
-        # self.sound = QtCore.QObject.QtMultimedia.QSound(file)
         self._raw,self.rate = lb.load(file)
         trimmed,ind = lb.effects.trim(self._raw,top_db=50)
         # print(index[0])
@@ -65,31 +60,13 @@ class Aud():
             self.data = self._raw[ind[0]:ind[1] + int(0.03*self.rate) - 1]
         else:
             self.data = self._raw[ind[0]:ind[1] + int(0.03*self.rate)]
+        wind = int(self.data.shape[0]/20)
         self.seg = floor(self.data.shape[0]/dim)
         self.length = self._raw.shape[0]
-        # self.envelope = resample(normalize_level(windowed_avg(self.data,wind)),64,window = 'hann')
-        # self.spectrum = np.abs(np.fft.rfft(self.data,n=21654)).astype('float32')
-        # self.melspectrogram()
-    def envelope(self):
-        wind = int(self.data.shape[0]/20)
-        return(resample(normalize_level(windowed_avg(self.data,wind)),64,window = 'hann'))
-    def spectrum(self):
-        return(np.abs(np.fft.rfft(self.data,n=21654)).astype('float32'))
-    def melspectrogram(self):
-        # print(self.directory)
-        rate = self.rate
-        seg_length = 2*(dim - 1)
-        fft = int((2.99936669e-02 * self.data.shape[0]) + 1.42217233e+02)
-        hop=int((0.01516035 * self.data.shape[0]) - 2.14982993)
-        S = lb.feature.melspectrogram(self.data,self.rate,n_mels=mels,hop_length=hop,center=False,n_fft=fft,norm=1,fmax=fmax_,power=poww)
-        while S.shape[1]!=dim:
-            if S.shape[1]>dim:
-                fft+=2
-            elif S.shape[1]<dim:
-                hop-=1
-            S = lb.feature.melspectrogram(self.data,self.rate,n_mels=mels,hop_length=hop,n_fft=fft,center=False,norm=1,fmax=fmax_,power=poww)
-        S = 255*(S - S.min())/(S.max()-S.min())
-        return(S)
+        self.envelope = resample(normalize_level(windowed_avg(self.data,wind)),64,window = 'hann')
+        self.spectrum = np.abs(np.fft.rfft(self.data,n=21654))
+    def align_datas(self):
+        return(np.asarray([self.envelope,self.spectrum]))
     def play(self):
         self.sound.play()
     def better_spectrum(self,num_seg=75):
@@ -111,7 +88,7 @@ class Aud():
             else:
                 this_freq = ft[ind][0] / ft.max()
                 freq_path.append(this_freq)
-        return(normalize_level(np.asarray(freq_path[:33],dtype='float32')))
+        return(normalize_level(np.asarray(freq_path[:33])))
     def env_peak(self,ind=False):
         peak_loc = np.where(self.envelope==self.envelope.max())[0][0]
         if ind:
@@ -126,62 +103,6 @@ class Aud():
         # print(x)
         popt,pcov=curve_fit(log_func,x,decay,p0=[7,0.1,10],bounds=[[0,0,6],[50,50,10]])
         return(popt)
-
-
-old = 0
-def Sound_Graph_3D(data,sounds,names,slider = False):
-    annots = []
-    fig = plt.figure()
-    if slider:
-        x,y,z,slide_range=data
-    else:
-        try:
-            x,y,z =data
-        except ValueError:
-            print('4-dimensional data requires slider=True!')
-    ax=fig.add_subplot(111,projection='3d')
-    sc = ax.scatter(x,y,z)
-    for i,name in enumerate(names):
-        annots.append(ax.text(x[i],y[i],z[i],names[i][:-4]))
-            # annots[i].get_bbox_patch().set_alpha(0.4)
-        annots[i].set_visible(False)
-    def hover(event):
-        global old
-        if event.inaxes == ax:
-            cont, ind = sc.contains(event)
-            annots[old].set_visible(False)
-            # print(cont,ind)
-            if cont:
-                ii=ind["ind"][0]
-                sounds[ii].play()
-                annots[ii].set_visible(True)
-                fig.canvas.draw_idle()
-                old = ii
-            else:
-                pass
-    fig.canvas.mpl_connect("button_press_event", hover)
-    if slider:
-        max_ax = plt.axes([0.25,0.1,0.65,0.03])
-        min_ax = plt.axes([0.25,0.15,0.65,0.03])
-        # butt_ax = plt.axes([0.8,0.025,0.1,0.04])
-        max_slide = Slider(max_ax,'This one',slide_range.min(),slide_range.max(),valinit = slide_range.max(),valstep=slide_range.std())
-        min_slide = Slider(min_ax,'That one',slide_range.min(),slide_range.max(),valinit = slide_range.min(),valstep=slide_range.std())
-        # button = Button(butt_ax,'Update')
-        def update(val):
-            print('oy')
-            sc.remove()
-            low = min_slide.val
-            high = max_slide.val
-            print(low)
-            mask = np.ma.masked_where(slide_range> low,slide_range)
-            X = np.ma.masked_where(slide_range>low,x,np.nan)
-            Y = np.ma.masked_where(slide_range>low,x,np.nan)
-            Z = np.ma.masked_where(slide_range>low,x,np.nan)
-            fig.canvas.draw_idle()
-        max_slide.on_changed(update)
-        min_slide.on_changed(update)
-        # button.on_clicked(reset)
-    return(fig,ax)
 
 def Sound_Graph(x,y,sounds,names,nodes,dim = 2):
     annots = []
@@ -212,8 +133,7 @@ def Sound_Graph(x,y,sounds,names,nodes,dim = 2):
         annots[i].set_visible(True)
     return(fig,ax)
 
-def loadpca():
-    pca_df = pd.read_excel("C:/Users/Owner/Documents/Audio Processing Stuff/pca_data.xlsx",index_col=0)
+pca_df = pd.read_csv("C:/Users/Owner/Documents/Audio Processing Stuff/pca_data.csv",index_col=0)
 
 def norm_df(df):
     for col in df:
@@ -254,8 +174,6 @@ def Spiderer(nodes,sounds,names,opendir="C:/Users/Owner/Documents/Audio Processi
         with open(savdir + 'data.pickle','rb') as f:
             data_dict = pickle.load(f)
         
-        # names = os.listdir(opendir)
-        
         masters_inds = [names.index(node) for node in nodes]
         
         masters_items = dict(zip(nodes,[dict(zip(meas,[data_dict[key][i] for key in meas])) for i in masters_inds]))
@@ -269,8 +187,6 @@ def Spiderer(nodes,sounds,names,opendir="C:/Users/Owner/Documents/Audio Processi
             data_df[(node,feat)]=new_data
     data_df=norm_df(data_df)
     if save_data:
-        
-#         data_df.fillna(method='backfill',inplace=True)
         data_df.to_excel(savdir+'Spider_Data.xlsx')
     else:
         pass
@@ -282,11 +198,8 @@ def Spiderer(nodes,sounds,names,opendir="C:/Users/Owner/Documents/Audio Processi
 
     for wav in data_df.index.values:
         weights = np.array([[np.tile(data_df[node][feat][wav],2) for node in nodes] for feat in meas])
-        # weights = [data_df[node][char][wav] for char in ['Freq','Amp','Punch']]
         pos = np.sum(np.multiply(np.sum(weights,axis=0),reverse_vectors)+nodal_vectors,axis=0)
         plotter.loc[wav]=pos
-        # print(pos)
-        # exit()
 
     return(plotter,nodal_vectors)
 
