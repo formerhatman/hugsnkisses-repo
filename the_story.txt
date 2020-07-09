@@ -5,10 +5,17 @@ This initial version is pretty lame, but in the future it'll be better...
 
 Here's the story:
 
-I saw Andrew Huang do a video on XLN Audio's software XO, which uses some kind of machine learning algorithm to sort drum samples onto a 2D plane. I got the software to play around with, and it's not too bad. The Y-axis is approximately decay time/sample length, and the x-axis is relative pitch. It works pretty well, but falters when I put my own samples in. I found it a bit stifling to search through the categories that they decided to sort on. Yes it kind of makes sense, and they were definitely going for generality and organization. 
+I saw Andrew Huang do a video on XLN Audio's software XO, which uses some kind of machine learning algorithm to sort drum samples onto a 2D plane. 
+I got the software to play around with, and it's not too bad. 
+The Y-axis is approximately decay time/sample length, and the x-axis is relative pitch. 
+It works pretty well, but falters when I put my own samples in. 
+I found it a bit stifling to search through the categories that they decided to sort on. 
+Yes it kind of makes sense, and they were definitely going for generality and organization. 
 
 However, they made a fatal mistake!
 
-The best part of the software is being able to sweep the mouse across the plane of samples and hear the frequencies move, turning the individual drum samples into a very cool sort of aphex-twin drum vibe. Any sap can organize his drum samples, but being able to do these salacious sweeps of sound-space smoothly separates the sods from the sonically superior. 
+The best part of the software is being able to sweep the mouse across the plane of samples and hear the frequencies move, turning the individual drum samples into a very cool sort of aphex-twin drum vibe. 
+Any sap can organize his drum samples, 
+but being able to do these salacious sweeps of sound-space smoothly separates the sods from the sonically superior, I surmise. 
 
 I sought to create a means of making those kinds of drum sweeps in a versatile way. THAT is what hugsnkisses is.
