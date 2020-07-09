@@ -6,17 +6,19 @@ Welcome to hugsnkisses, a relatively simple means to sort drum samples against e
 ##### Dependencies
 1. librosa, simpleaudio, soundfile, and scipy.signal for audio processing modules
 2. pandas for data wrangling
-3. matplotlib for plotting and plot callbacks
+3. pyqtgraph for plotting and plot callbacks.
 
 ## Operation 
 The user picks three or more samples from the initial grid of samples. The other samples are compared against these, and the final graph is drawn.
 
 The final graph first puts the `N` master samples evenly spaced on a unit circle. For each of the `n` rest-of-the samples, a vector is computed via a weighted sum of the categories. These are the PCA component coefficients and the sum of log-error of amplitude and frequency spectrum. 
-For each of the `n` samples, `N` weights are computed corresponding to the master samples. This vector gets multiplied by the `N basis vectors, and the position of the sample is thus computed.
+For each of the `n` samples, `N` weights are computed corresponding to the master samples. This vector gets multiplied by the `N` basis vectors, and the position of the sample is thus computed.
 
 ## Presentation.py
 
-The GUI is currently built on tkinter, but I plan to change to PyQT5 in a future version.
+\The GUI is currently built on tkinter, but I plan to change to PyQT5 in a future version.
+I've changed from tkinter GUI to PyQT5. This enables use of the pyqtgraph module for faster plotting.
+
 The graphs are generated in Aud.py and displayed in a big frame, buttons are on the right.
 
 ## Aud.py
