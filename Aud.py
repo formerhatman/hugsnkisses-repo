@@ -2,11 +2,17 @@ import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
 import os
+from sklearn.manifold import TSNE
 import simpleaudio as sa
+# from pydub import AudioSegment
+# from pydub.playback import play
 # from PyQt5 import QtCore
 import pandas as pd
 from scipy.signal import stft,resample,resample_poly
-import librosa as lb
+from librosa import load
+from librosa import get_samplerate
+from librosa.effects import trim
+from librosa.feature import melspectrogram
 from scipy.optimize import curve_fit
 from soundfile import write
 import pickle
@@ -53,13 +59,15 @@ mels=dim
 poww = 2
 
 fmax_ = 12000
-class Aud():
+class Soundo():
     def __init__(self,file,dim=dim):
         self.directory = file
-        self.sound = sa.WaveObject.from_wave_file(file)
+        # print(file)
+        self.sound = sa.WaveObject.from_wave_file(self.directory)
+
         # self.sound = QtCore.QObject.QtMultimedia.QSound(file)
-        self._raw,self.rate = lb.load(file)
-        trimmed,ind = lb.effects.trim(self._raw,top_db=50)
+        self._raw,self.rate = load(file)
+        trimmed,ind = trim(self._raw,top_db=50)
         # print(index[0])
         if ((ind[1] + int(0.03*self.rate) - ind[0]) % 2):
             self.data = self._raw[ind[0]:ind[1] + int(0.03*self.rate) - 1]
@@ -76,18 +84,18 @@ class Aud():
     def spectrum(self):
         return(np.abs(np.fft.rfft(self.data,n=21654)).astype('float32'))
     def melspectrogram(self):
-        # print(self.directory)
+        print(self.directory)
         rate = self.rate
         seg_length = 2*(dim - 1)
         fft = int((2.99936669e-02 * self.data.shape[0]) + 1.42217233e+02)
         hop=int((0.01516035 * self.data.shape[0]) - 2.14982993)
-        S = lb.feature.melspectrogram(self.data,self.rate,n_mels=mels,hop_length=hop,center=False,n_fft=fft,norm=1,fmax=fmax_,power=poww)
+        S = melspectrogram(self.data,self.rate,n_mels=mels,hop_length=hop,center=False,n_fft=fft,norm=1,fmax=fmax_,power=poww)
         while S.shape[1]!=dim:
             if S.shape[1]>dim:
                 fft+=2
             elif S.shape[1]<dim:
                 hop-=1
-            S = lb.feature.melspectrogram(self.data,self.rate,n_mels=mels,hop_length=hop,n_fft=fft,center=False,norm=1,fmax=fmax_,power=poww)
+            S = melspectrogram(self.data,self.rate,n_mels=mels,hop_length=hop,n_fft=fft,center=False,norm=1,fmax=fmax_,power=poww)
         S = 255*(S - S.min())/(S.max()-S.min())
         return(S)
     def play(self):
@@ -228,7 +236,7 @@ def Spiderer(nodes,sounds,names,opendir="C:/Users/Owner/Documents/Audio Processi
     data = np.zeros((len(names),len(nodes)*len(meas)))
     data_df = pd.DataFrame(data.T,index=MI).transpose()
     data_df.index =  names
-    masters = [Aud(opendir + node) for node in nodes]
+    masters = [Soundo(opendir + node) for node in nodes]
     if new_data:
         for i,file in enumerate(os.listdir(opendir)):
             if file in nodes:
