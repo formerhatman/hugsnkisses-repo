@@ -8,7 +8,7 @@ Welcome to hugsnkisses, a relatively simple means to sort drum samples against e
 2. numpy for data wrangling
 3. PyQt5/pyqtgraph for GUI,plotting, and plot callbacks.
 
-###Instructions
+### Instructions
 When you run QtPresentation.py for the first time, the "Baby's First paths" window appears. 
 Extract the Way Bigger Drumset and copy-paste its path into the textbox, then hit Donezo.
 It'll scan the folder (and its sub-folders) for wav files (other sound files not currently supported) and generate all the relevant data. It'll store this data in the files HnKsounds.pickle, HnKdata.pickle, and HnK_melspec.pickle.
