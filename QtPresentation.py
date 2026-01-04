@@ -19,6 +19,7 @@ import pandas as pd
 from librosa import get_samplerate
 import pickle
 from PyQt5 import QtGui,QtCore
+from PyQt5.QtWidgets import QLabel
 import pyqtgraph as pg
 from wave import Error
 '''
@@ -304,11 +305,11 @@ nodeinds = []
 
 class Windy:
     def __init__(self):
-        self.app = QtGui.QApplication([])
+        self.app = QtGui.QGuiApplication([])
         self.icon = QtGui.QIcon(os.getcwd()+'\\dutch oven.png')
         self.startSize=7
         # self.app.setWindowIcon(self.icon)
-        self.Statustext = QtGui.QLabel('Status stuff appears here')
+        self.Statustext = QLabel('Status stuff appears here')
         self.Initialize()
 
     
@@ -320,9 +321,9 @@ class Windy:
             openwindow.setWindowIcon(self.icon)
             openwindow.resize(QtCore.QSize(300,300))
             openwindow.setWindowTitle('Hugs\'n\'Kisses')
-            Initialtext = QtGui.QLabel('Loading Data...')
+            Initialtext = QLabel('Loading Data...')
             Initialtext.setText('Loading Data...')
-            image = QtGui.QLabel()
+            image = QLabel()
             pixmap = QtGui.QPixmap("C:\\Users\\Owner\\Pictures\\metal sponge.jpg")
             image.setPixmap(pixmap)
             layout = QtGui.QGridLayout()
@@ -330,17 +331,13 @@ class Windy:
             layout.addWidget(image)
             openwindow.setLayout(layout)
             openwindow.show()
-            
             with open(os.getcwd()+'\\HnK_paths.dat','r') as f:
                 self.paths = [path[:-1] for path in f.readlines()]
             self.backend = data_format(self.paths,Initialtext)
             self.backend.check_newbies()
             self.update_graph()
-            # self.ploot.enableAutoRange()
             openwindow.close()
             self.MainWindow()
-
-
         else:
             self.path_maker(first=True)
     def update_graph(self):
@@ -350,16 +347,10 @@ class Windy:
         Yarray = np.transpose(Xarray.reshape(Xdim,Xdim)).ravel().astype(float)
         self.pointset = np.array([Yarray[:num_pts],Xarray[:num_pts]])
         self.graph=pg.PlotWidget(enableMouse='False')
-        # self.graph.setMouseEnabled(x=False,y=False)
-        # self.graph.enableAutoRange()
         self.ploot = self.graph.plot(self.pointset[0],self.pointset[1],pen=None,symbol='o',clickable=True,data = self.backend.indicies,symbolSize=self.startSize)
         viewbox = self.ploot.getViewBox()
-        # viewbox.setMouseEnabled(False,False)
-        # print(self.ploot.getViewBox())
 
     def clicked(self,plot, points):
-        # print(plot)
-        # print(points)
         global lastClicked
         global nodelst
         for p in lastClicked:
@@ -424,14 +415,11 @@ class Windy:
     def dragon(self):
         print('hey')
     def MainWindow(self):
-        
-         
-        
         w = QtGui.QWidget()
         w.setWindowTitle('Hugs\'n\'Kisses')
         w.resize(QtCore.QSize(1200,600))
         w.setWindowIcon(self.icon)
-        self.Statustext = QtGui.QLabel('')
+        self.Statustext = QLabel('')
         self.Statustext.setFixedSize(500,15)
         self.backend.set_label(self.Statustext)
         pathbtn = QtGui.QPushButton('Change Paths')
@@ -439,7 +427,7 @@ class Windy:
         refbtn = QtGui.QPushButton('Go!')
         self.autobtn = QtGui.QPushButton('Auto Spread')
         self.listw = QtGui.QListWidget()
-        self.Statustext = QtGui.QLabel('')
+        self.Statustext = QLabel('')
         self.Statustext.setFixedSize(500,15)
         self.backend.set_label(self.Statustext)
         # print(self.graph.sceneObj.lastHoverEvent)
@@ -474,7 +462,7 @@ class Windy:
         addbtn = QtGui.QPushButton('Add')
         rembtn = QtGui.QPushButton('Remove')
         retbtn = QtGui.QPushButton('Donezo')
-        self.Statustext = QtGui.QLabel('Status Info Will Appear Here')
+        self.Statustext = QLabel('Status Info Will Appear Here')
         pathbox = QtGui.QListWidget()
         layout = QtGui.QGridLayout()
         line_edit = QtGui.QLineEdit()
